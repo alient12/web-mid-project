@@ -5,6 +5,9 @@ import (
 	"myapp/internal/domain/model"
 	"myapp/internal/domain/repository/basketrepo"
 	"sync"
+	"time"
+
+	"github.com/labstack/echo/v4"
 )
 
 type Repository struct {
@@ -51,4 +54,35 @@ func (r *Repository) Get(_ context.Context, cmd basketrepo.GetCommand) []model.B
 		}
 	}
 	return baskets
+}
+
+func (r *Repository) GetAll(_ context.Context) []model.Basket {
+	r.lock.RLock()
+	defer r.lock.RUnlock()
+
+	var baskets []model.Basket
+
+	for _, basket := range r.baskets {
+		baskets = append(baskets, basket)
+	}
+
+	return baskets
+}
+
+func (r *Repository) Update(_ context.Context, m model.Basket) error {
+	r.lock.RLock()
+	defer r.lock.RUnlock()
+
+	if entry, ok := r.baskets[m.ID]; !ok {
+		return echo.ErrNotFound
+	} else {
+		if entry.State {
+			return basketrepo.ErrBasketStateCompleted
+		}
+		entry.Data = m.Data
+		entry.State = m.State
+		entry.UpdatedAt = time.Now()
+	}
+
+	return nil
 }

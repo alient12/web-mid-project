@@ -5,7 +5,9 @@ import (
 	"errors"
 	"myapp/internal/domain/model"
 	"myapp/internal/domain/repository/basketrepo"
+	"time"
 
+	"github.com/labstack/echo/v4"
 	"gorm.io/gorm"
 )
 
@@ -49,4 +51,38 @@ func (r *Repository) Get(_ context.Context, cmd basketrepo.GetCommand) []model.B
 		baskets[index] = dto.Basket
 	}
 	return baskets
+}
+
+func (r *Repository) GetAll(_ context.Context) []model.Basket {
+	var basketDTOs []BasketDTO
+	if err := r.db.Find(&basketDTOs); err != nil {
+		// return nil
+	}
+	baskets := make([]model.Basket, len(basketDTOs))
+
+	for index, dto := range basketDTOs {
+		baskets[index] = dto.Basket
+	}
+	return baskets
+}
+
+func (r *Repository) Update(ctx context.Context, model model.Basket) error {
+	var basketDTOs []BasketDTO
+	var condition BasketDTO
+
+	condition.ID = model.ID
+	if err := r.db.Where(&condition).Find(&basketDTOs); err != nil {
+		// return nil
+	}
+	if len(basketDTOs) > 1 {
+		return echo.ErrInternalServerError
+	}
+	if basketDTOs[0].State {
+		return basketrepo.ErrBasketStateCompleted
+	}
+	tx := r.db.WithContext(ctx).Model(&basketDTOs[0]).Update("Data", model.Data).Update("State", model.State).Update("UpdatedAt", time.Now())
+	if tx.Error != nil {
+		return tx.Error
+	}
+	return nil
 }

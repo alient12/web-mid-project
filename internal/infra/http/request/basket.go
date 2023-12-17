@@ -8,7 +8,7 @@ import (
 
 type BasketCreate struct {
 	Data  string `json:"data,omitempty,max=512" validate:"required"`
-	State bool   `json:"state,omitempty" validate:"required"`
+	State bool   `json:"state,omitempty"`
 }
 
 func (bc BasketCreate) Validate() error {
