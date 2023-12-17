@@ -18,4 +18,5 @@ type Repository interface {
 	Get(ctx context.Context, cmd GetCommand) []model.Basket
 	GetAll(ctx context.Context) []model.Basket
 	Update(ctx context.Context, model model.Basket) error
+	Delete(ctx context.Context, id uint64) error
 }

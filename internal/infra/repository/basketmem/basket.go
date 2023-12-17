@@ -86,3 +86,16 @@ func (r *Repository) Update(_ context.Context, m model.Basket) error {
 
 	return nil
 }
+
+func (r *Repository) Delete(_ context.Context, id uint64) error {
+	r.lock.RLock()
+	defer r.lock.RUnlock()
+
+	if _, ok := r.baskets[id]; !ok {
+		return echo.ErrNotFound
+	}
+
+	delete(r.baskets, id)
+
+	return nil
+}

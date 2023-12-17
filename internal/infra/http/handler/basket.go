@@ -115,9 +115,23 @@ func (b *Basket) Update(c echo.Context) error {
 	return c.JSON(http.StatusCreated, id)
 }
 
+func (b *Basket) Delete(c echo.Context) error {
+	id, err := strconv.ParseUint(c.Param("id"), 10, 64)
+	if err != nil {
+		return echo.ErrBadRequest
+	}
+
+	if err := b.repo.Delete(c.Request().Context(), id); err != nil {
+		return echo.ErrBadRequest
+	}
+
+	return c.JSON(http.StatusOK, id)
+}
+
 func (b *Basket) Register(g *echo.Group) {
 	g.POST("/basket", b.Create)
 	g.GET("/basket", b.Get)
 	g.GET("/basket/:id", b.GetByID)
 	g.PATCH("/basket/:id", b.Update)
+	g.DELETE("/basket/:id", b.Delete)
 }

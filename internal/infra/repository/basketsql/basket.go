@@ -72,7 +72,10 @@ func (r *Repository) Update(ctx context.Context, model model.Basket) error {
 
 	condition.ID = model.ID
 	if err := r.db.Where(&condition).Find(&basketDTOs); err != nil {
-		// return nil
+		// return echo.ErrBadRequest
+	}
+	if len(basketDTOs) == 0 {
+		return echo.ErrInternalServerError
 	}
 	if len(basketDTOs) > 1 {
 		return echo.ErrInternalServerError
@@ -81,6 +84,28 @@ func (r *Repository) Update(ctx context.Context, model model.Basket) error {
 		return basketrepo.ErrBasketStateCompleted
 	}
 	tx := r.db.WithContext(ctx).Model(&basketDTOs[0]).Update("Data", model.Data).Update("State", model.State).Update("UpdatedAt", time.Now())
+	if tx.Error != nil {
+		return tx.Error
+	}
+	return nil
+}
+
+func (r *Repository) Delete(ctx context.Context, id uint64) error {
+	var basketDTOs []BasketDTO
+	var condition BasketDTO
+
+	condition.ID = id
+	if err := r.db.Where(&condition).Find(&basketDTOs); err != nil {
+		// return echo.ErrBadRequest
+	}
+	if len(basketDTOs) == 0 {
+		return echo.ErrInternalServerError
+	}
+	if len(basketDTOs) > 1 {
+		return echo.ErrInternalServerError
+	}
+
+	tx := r.db.WithContext(ctx).Delete(&basketDTOs[0])
 	if tx.Error != nil {
 		return tx.Error
 	}
